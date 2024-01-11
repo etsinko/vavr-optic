@@ -1,0 +1,103 @@
+package io.vavr.optic;
+
+import org.junit.Test;
+
+import java.util.function.Function;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+
+public class LensTest {
+    @Test
+    public void testLensPersonGet() {
+        final String oldName = "Joe";
+        final int oldNumber = 10;
+        final String oldStreet = "Main St";
+        final Address oldAddress = new Address(oldNumber, oldStreet);
+        final Person oldPerson = new Person(oldName, oldAddress);
+        final Lens<Person, String> personNameLens = Lens.lens(p -> p.name, s -> p -> new Person(s, p.address));
+        final Lens<Person, Address> personAddressLens = Lens.lens(p -> p.address, a -> p -> new Person(p.name, a));
+        final Lens<Address, Integer> addressNumberLens = Lens.lens(a -> a.number, n -> a -> new Address(n, a.street));
+        final Lens<Address, String> addressStreetLens = Lens.lens(a -> a.street, s -> a -> new Address(a.number, s));
+        final Lens<Person, Integer> personNumberLens = personAddressLens.composeLens(addressNumberLens);
+        final Lens<Person, String> personStreetLens = personAddressLens.composeLens(addressStreetLens);
+        assertThat(personNameLens.get(oldPerson), is(oldName));
+        assertThat(personNumberLens.get(oldPerson), is(oldNumber));
+        assertThat(personStreetLens.get(oldPerson), is(oldStreet));
+    }
+
+    @Test
+    public void testLensPersonSetName() {
+        final String oldName = "Joe";
+        final int oldNumber = 10;
+        final String oldStreet = "Main St";
+        final Address oldAddress = new Address(oldNumber, oldStreet);
+        final Person oldPerson = new Person(oldName, oldAddress);
+        final Lens<Person, String> personNameLens = Lens.lens(p -> p.name, s -> p -> new Person(s, p.address));
+        String newName = "Bill";
+        Person p = personNameLens.set(newName).apply(oldPerson);
+        assertThat(p.name, is(newName));
+        assertThat(p.address, is(oldPerson.address));
+    }
+
+    @Test
+    public void testLensPersonSetNumber() {
+        final String oldName = "Joe";
+        final int oldNumber = 10;
+        final String oldStreet = "Main St";
+        final Address oldAddress = new Address(oldNumber, oldStreet);
+        final Person oldPerson = new Person(oldName, oldAddress);
+        final Lens<Person, Address> personAddressLens = Lens.lens(p -> p.address, a -> p -> new Person(p.name, a));
+        final Lens<Address, Integer> addressNumberLens = Lens.lens(a -> a.number, n -> a -> new Address(n, a.street));
+        final Lens<Person, Integer> personNumberLens = personAddressLens.composeLens(addressNumberLens);
+        int newNumber = 20;
+        Person p = personNumberLens.set(newNumber).apply(oldPerson);
+        assertThat(p.name, is(oldName));
+        assertThat(p.address.number, is(newNumber));
+        assertThat(p.address.street, is(oldStreet));
+    }
+
+    @Test
+    public void testLensPersonSetStreet() {
+        final String oldName = "Joe";
+        final int oldNumber = 10;
+        final String oldStreet = "Main St";
+        final Address oldAddress = new Address(oldNumber, oldStreet);
+        final Person oldPerson = new Person(oldName, oldAddress);
+        final Lens<Person, Address> personAddressLens = Lens.lens(p -> p.address, a -> p -> new Person(p.name, a));
+        final Lens<Address, Integer> addressNumberLens = Lens.lens(a -> a.number, n -> a -> new Address(n, a.street));
+        final Lens<Address, String> addressStreetLens = Lens.lens(a -> a.street, s -> a -> new Address(a.number, s));
+        final Lens<Person, String> personStreetLens = personAddressLens.composeLens(addressStreetLens);
+        String newStreet = "First St";
+        Person p = personStreetLens.set(newStreet).apply(oldPerson);
+        assertThat(p.name, is(oldName));
+        assertThat(p.address.number, is(oldPerson.address.number));
+        assertThat(p.address.street, is(newStreet));
+    }
+
+    @Test
+    public void testLensPersonSetter() {
+        final String oldName = "Joe";
+        final int oldNumber = 10;
+        final String oldStreet = "Main St";
+        final Address oldAddress = new Address(oldNumber, oldStreet);
+        final Person oldPerson = new Person(oldName, oldAddress);
+        final Lens<Person, String> personNameLens = Lens.lens(p -> p.name, s -> p -> new Person(s, p.address));
+        String newName = "Bill";
+        Function<Person, Person> setter = personNameLens.asSetter().set(newName);
+        Person p = setter.apply(oldPerson);
+        assertThat(p.name, is(newName));
+        assertThat(p.address, is(oldPerson.address));
+    }
+
+    @Test
+    public void testLensPersonGetter() {
+        final String oldName = "Joe";
+        final int oldNumber = 10;
+        final String oldStreet = "Main St";
+        final Address oldAddress = new Address(oldNumber, oldStreet);
+        final Person oldPerson = new Person(oldName, oldAddress);
+        final Lens<Person, String> personNameLens = Lens.lens(p -> p.name, s -> p -> new Person(s, p.address));
+        assertThat(personNameLens.asGetter().get(oldPerson), is(oldName));
+    }
+}

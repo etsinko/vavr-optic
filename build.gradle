@@ -1,0 +1,30 @@
+plugins {
+    id 'java'
+    id 'java-library'
+    id 'maven-publish'
+    id 'jacoco'
+}
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+    toolchain {
+        languageVersion = JavaLanguageVersion.of('8')
+        vendor = JvmVendorSpec.ADOPTIUM
+    }
+}
+
+dependencies {
+    implementation group: 'io.vavr', name: 'vavr', version: '0.10.4'
+
+    compileOnly group:"com.intellij", name: "annotations", version: "12.0"
+    testImplementation "junit:junit:4.13.2"
+}
+
+test {
+    useJUnit()
+}
